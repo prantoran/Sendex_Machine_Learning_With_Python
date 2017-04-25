@@ -7,6 +7,7 @@ from sklearn import preprocessing, cross_validation, svm
 from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
 from matplotlib import style
+import pickle
 
 style.use('ggplot') #for visualization
 
@@ -22,7 +23,7 @@ df.fillna(-99999,inplace=True) #fill missing values
 
 print(df.head())
 
-forecast_out = int(math.ceil(0.01*len(df))) # taking 10% of the data
+forecast_out = int(math.ceil(0.1*len(df))) # taking 10% of the data
 print("forecast_out:"+str(forecast_out))
 df['label'] = df[forecast_col].shift(-forecast_out)
 print(df.head())
@@ -30,13 +31,13 @@ print(df.head())
 X = np.array(df.drop(['label'],1)) #features
 X = preprocessing.scale(X)  #if new records are added, they need to be preprocessed together with the previous data
                            #hence adding to computation time
-X = X[:-forecast_out]
 X_lately = X[-forecast_out:]
+X = X[:-forecast_out]
+
 
 
 #X = X[:-forecast_out +1]
 df.dropna(inplace=True) #drop rows with missing attribute values
-y = np.array(df['label'])
 y = np.array(df['label'])
 
 print(len(X),len(y))
@@ -60,6 +61,13 @@ print(accuracy)
 clf = LinearRegression(n_jobs=10) #10 threads
 #clf = LinearRegression(n_jobs=-1) #as many threads as possible
 clf.fit(X_train, y_train)
+
+with open('linearregression.pickle','wb') as f:
+    pickle.dump(clf,f) #saving model
+
+pickle_in = open('linearregression.pickle','rb')
+clf = pickle.load(pickle_in)
+
 accuracy = clf.score(X_test,y_test)
 
 print(accuracy)
